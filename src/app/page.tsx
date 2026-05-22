@@ -1,65 +1,111 @@
-import Image from "next/image";
+"use client"
+import { DashboardLayout } from "../components/layout/Dashboard"
+import { useEffect, useState } from "react"
+import { TransactionForm } from "../components/forms/TransactionForm"
+import { TransactionTable } from "../components/dashboard/TransactionTable"
+import { Transaction } from "../types/transaction"
 
-export default function Home() {
+export default function HomePage() {
+
+  // ----------------------------
+  // STATE — the app's "memory"
+  // ----------------------------
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+  if (typeof window === "undefined") return []
+  const storedTransactions = localStorage.getItem("transactions")
+  return storedTransactions ? JSON.parse(storedTransactions) : []
+})
+
+  // ----------------------------
+  // ADD a new transaction
+  // ----------------------------
+  function addTransaction(transaction: Transaction) {
+    setTransactions((prev) => [transaction, ...prev])
+    // [transaction, ...prev] puts the newest one at the TOP of the list
+  }
+
+  // ----------------------------
+  // DELETE a transaction by id
+  // ----------------------------
+  function deleteTransaction(id: string) {
+    setTransactions((prev) =>
+      prev.filter((transaction) => transaction.id !== id)
+      // filter() keeps everything EXCEPT the one with the matching id
+    )
+  }
+
+  // ----------------------------
+  // LOAD from localStorage on first render
+  // ----------------------------
+  // The empty [] means: run this ONCE when the page loads, never again
+
+  // ----------------------------
+  // SAVE to localStorage whenever transactions change
+  // ----------------------------
+  useEffect(() => {
+    localStorage.setItem("transactions", JSON.stringify(transactions))
+  }, [transactions])
+  // [transactions] means: re-run this every time transactions updates
+
+  // ----------------------------
+  // CALCULATE totals for the summary cards
+  // ----------------------------
+  const totalSpending = transactions.reduce(
+    (total, transaction) => total + transaction.amount,
+    0
+  )
+
+  // ----------------------------
+  // UI
+  // ----------------------------
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <DashboardLayout>
+      <div className="space-y-6">
+
+        {/* Page Header */}
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
+            Track your expenses and spending.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          <div className="rounded-xl border p-6">
+            <p className="text-sm text-muted-foreground">Total Transactions</p>
+            <h2 className="text-3xl font-bold mt-2">
+              {transactions.length}
+            </h2>
+          </div>
+
+          <div className="rounded-xl border p-6">
+            <p className="text-sm text-muted-foreground">Total Spending</p>
+            <h2 className="text-3xl font-bold mt-2">
+              ${totalSpending.toFixed(2)}
+            </h2>
+          </div>
+
+          <div className="rounded-xl border p-6">
+            <p className="text-sm text-muted-foreground">Latest Category</p>
+            <h2 className="text-3xl font-bold mt-2">
+              {transactions.length > 0 ? transactions[0].category : "—"}
+            </h2>
+          </div>
+
         </div>
-      </main>
-    </div>
-  );
+
+        {/* Form + Table side by side on large screens */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TransactionForm onAddTransaction={addTransaction} />
+          <TransactionTable
+            transactions={transactions}
+            onDelete={deleteTransaction}
+          />
+        </div>
+
+      </div>
+    </DashboardLayout>
+  )
 }
