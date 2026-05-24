@@ -3,19 +3,18 @@
 import { useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import {
-  LayoutDashboard,
-  Receipt,
-  PieChart,
-  Wallet,
-  Menu,
-  X
+  LayoutDashboard, Receipt, PieChart,
+  Wallet, FileText, Settings, Menu, X
 } from "lucide-react"
+
 
 const links = [
   { name: "Dashboard",    href: "/",             icon: LayoutDashboard },
   { name: "Transactions", href: "/transactions",  icon: Receipt },
   { name: "Budgets",      href: "/budgets",       icon: Wallet },
   { name: "Analytics",    href: "/analytics",     icon: PieChart },
+  { name: "Bills",        href: "/bills",         icon: FileText },
+  { name: "Settings",     href: "/settings",      icon: Settings },
 ]
 
 function SidebarLinks({ onNavigate }: { onNavigate?: () => void }) {

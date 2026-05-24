@@ -12,8 +12,21 @@ import { BudgetPanel } from "@/components/dashboard/BudgetPanel"
 import { Skeleton } from "@/components/ui/Skeleton"
 import { FadeIn } from "@/components/ui/FadeIn"
 import { toast } from "sonner"
-
+import { getUpcomingBills, BILL_CATEGORY_EMOJI } from "@/lib/billUtils"
+import { Bill } from "@/types/bill"
 export default function HomePage() {
+
+
+  // ----------------------------
+  // BILLS 
+  // ----------------------------
+  const [bills, setBills] = useState<Bill[]>(() => {
+  if (typeof window === "undefined") return []
+  const stored = localStorage.getItem("bills")
+  return stored ? JSON.parse(stored) : []
+})
+
+const upcomingBills = getUpcomingBills(bills, 14)
 
   // ----------------------------
   // MOUNTED — prevents hydration mismatch
@@ -200,7 +213,36 @@ export default function HomePage() {
             onDeleteBudget={deleteBudget}
           />
         </FadeIn>
-
+        {/* Upcoming Bills */}
+       
+            <FadeIn delay={0.5}>
+              <div className="rounded-xl border p-6 space-y-3">
+                <h2 className="text-lg font-bold">Upcoming Bills</h2>
+                <div className="space-y-2">
+                  {upcomingBills.map(({ bill, daysUntil }) => (
+                    <div key={bill.id} className="flex items-center justify-between border rounded-lg p-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{BILL_CATEGORY_EMOJI[bill.category]}</span>
+                        <div>
+                          <p className="text-sm font-medium">{bill.name}</p>
+                          <p className="text-xs text-muted-foreground">${bill.amount.toFixed(2)} · {bill.frequency}</p>
+                        </div>
+                      </div>
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                        daysUntil <= 3
+                          ? "bg-red-500/20 text-red-400"
+                          : daysUntil <= 7
+                          ? "bg-orange-500/20 text-orange-400"
+                          : "bg-primary/20 text-primary"
+                      }`}>
+                        {daysUntil === 0 ? "Due today!" : `${daysUntil}d left`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </FadeIn>
+         
       </div>
     </DashboardLayout>
   )
