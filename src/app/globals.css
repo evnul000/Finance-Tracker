@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@custom-variant dark (&:is(.dark *));
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
@@ -118,13 +119,60 @@
 }
 
 @layer base {
+  :root {
+    --background: #0f0f13;
+    --foreground: #e2e8f0;
+    --card: #16161f;
+    --card-foreground: #e2e8f0;
+    --popover: #16161f;
+    --popover-foreground: #e2e8f0;
+    --primary: #7c3aed;
+    --primary-foreground: #ffffff;
+    --secondary: #1e1b2e;
+    --secondary-foreground: #c4b5fd;
+    --muted: #1e1b2e;
+    --muted-foreground: #8b8fa8;
+    --accent: #4c1d95;
+    --accent-foreground: #ddd6fe;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --border: #2d2640;
+    --input: #2d2640;
+    --ring: #7c3aed;
+    --radius: 0.75rem;
+  }
+
+  /* Force dark purple as the default — no light mode */
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
+    box-sizing: border-box;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+
   html {
-    @apply font-sans;
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--background);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
   }
 }
