@@ -1,19 +1,9 @@
-import { PrismaClient } from "@prisma/client/edge"
-import { Pool } from "pg"
-import { PrismaPg } from "@prisma/adapter-pg"
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-})
-
-const adapter = new PrismaPg(pool)
+import { PrismaClient } from "@prisma/client"
 
 declare global {
   var prisma: PrismaClient | undefined
 }
 
-export const prisma =
-  global.prisma ??
-  new PrismaClient({ adapter })
+export const prisma = global.prisma ?? new PrismaClient()
 
 if (process.env.NODE_ENV !== "production") global.prisma = prisma
