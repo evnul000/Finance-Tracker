@@ -1,7 +1,9 @@
 import Cookies from "js-cookie"
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
-
+const BASE_URL = typeof window !== "undefined" 
+  ? "" 
+  : process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+  
 async function refreshAccessToken(): Promise<string | null> {
   try {
     const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
