@@ -26,18 +26,20 @@ function writeUsers(users: User[]) {
   ensureFile()
   fs.writeFileSync(DB_PATH, JSON.stringify(users, null, 2), "utf-8")
 }
+const users: User[] = []
 
 export async function createUser(email: string, username: string, password: string): Promise<User> {
   const users = readUsers()
   if (users.find(u => u.email === email)) throw new Error("Email already registered")
   const passwordHash = await bcrypt.hash(password, 12)
   const user: User = { id: crypto.randomUUID(), email, username, passwordHash }
+  users.push(user)
   writeUsers([...users, user])
   return user
 }
 
 export async function findUserByEmail(email: string): Promise<User | null> {
-  return readUsers().find(u => u.email === email) ?? null
+  return users.find(u => u.email === email) ?? null
 }
 
 export async function validatePassword(user: User, password: string): Promise<boolean> {
