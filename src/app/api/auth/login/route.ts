@@ -30,8 +30,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const payload = { userId: user.id, email: user.email, username: user.username }
-    const accessToken  = signAccessToken(payload)
+    const payload = {
+      userId: user.id,
+      email: user.email,
+      username: user.username,
+    }
+    const accessToken = signAccessToken(payload)
     const refreshToken = signRefreshToken(payload)
 
     await setAuthCookies(accessToken, refreshToken)
@@ -40,7 +44,9 @@ export async function POST(req: NextRequest) {
       user: { id: user.id, email: user.email, username: user.username },
       accessToken,
     })
-  } catch {
-    return NextResponse.json({ error: "Login failed" }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Login failed"
+    console.error("Login error:", message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

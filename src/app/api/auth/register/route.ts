@@ -23,8 +23,12 @@ export async function POST(req: NextRequest) {
 
     const user = await createUser(email, username, password)
 
-    const payload = { userId: user.id, email: user.email, username: user.username }
-    const accessToken  = signAccessToken(payload)
+    const payload = {
+      userId: user.id,
+      email: user.email,
+      username: user.username,
+    }
+    const accessToken = signAccessToken(payload)
     const refreshToken = signRefreshToken(payload)
 
     await setAuthCookies(accessToken, refreshToken)
@@ -35,6 +39,7 @@ export async function POST(req: NextRequest) {
     })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Registration failed"
+    console.error("Register error:", message)
     return NextResponse.json({ error: message }, { status: 400 })
   }
 }
