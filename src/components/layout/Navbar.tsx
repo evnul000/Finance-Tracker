@@ -12,6 +12,9 @@ import { getUpcomingBills, BILL_CATEGORY_EMOJI } from "@/lib/billUtils"
 import { CATEGORIES } from "@/config/categories"
 import { motion, AnimatePresence } from "framer-motion"
 import { createPortal } from "react-dom"
+import { useAuth } from "@/context/AuthContext"
+import { useSocket } from "@/hooks/useSocket"
+import { LogOut, Wifi, WifiOff } from "lucide-react"
 
 const PROFILE_ICONS: Record<string, string> = {
   cat: "🐱", dog: "🐶", fox: "🦊", bear: "🐻",
@@ -30,6 +33,8 @@ export function Navbar() {
   const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 })
   const bellRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const { user, logout } = useAuth()
+  const { connected }    = useSocket()
 
   useEffect(() => {
     const b  = localStorage.getItem("bills")
@@ -243,7 +248,20 @@ export function Navbar() {
               {settings.username}
             </span>
           </button>
+            {/* Socket connection indicator */}
+          <div
+            className={`w-2 h-2 rounded-full ${connected ? "bg-green-500" : "bg-muted"}`}
+            title={connected ? "Real-time connected" : "Connecting..."}
+          />
 
+          {/* Logout */}
+          <button
+            onClick={logout}
+            className="p-2 rounded-md hover:bg-muted transition text-muted-foreground hover:text-red-400"
+            title="Sign out"
+          >
+            <LogOut size={16} />
+          </button>
         </div>
       </header>
 

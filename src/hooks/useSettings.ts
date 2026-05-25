@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { UserSettings } from "@/types/settings"
+import { apiClient } from "@/lib/apiClient"
 
 const DEFAULT_SETTINGS: UserSettings = {
   username: "User",
@@ -10,23 +11,26 @@ const DEFAULT_SETTINGS: UserSettings = {
 }
 
 export function useSettings() {
-  const [settings, setSettings] = useState<UserSettings>(() => {
-    if (typeof window === "undefined") return DEFAULT_SETTINGS
-    const stored = localStorage.getItem("settings")
-    return stored ? JSON.parse(stored) : DEFAULT_SETTINGS
-  })
+  const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS)
 
-  function updateSettings(updated: Partial<UserSettings>) {
+  useEffect(() => {
+    apiClient.get<{ settings: UserSettings }>("/api/settings")
+      .then(data => setSettings(data.settings))
+      .catch(() => {})
+  }, [])
+
+  async function updateSettings(updated: Partial<UserSettings>) {
     const next = { ...settings, ...updated }
     setSettings(next)
-    localStorage.setItem("settings", JSON.stringify(next))
+    await apiClient.patch("/api/settings", updated)
   }
 
-  function clearAllData() {
-    localStorage.removeItem("transactions")
-    localStorage.removeItem("budgets")
-    localStorage.removeItem("bills")
-    localStorage.removeItem("settings")
+  async function clearAllData() {
+    await Promise.all([
+      apiClient.delete("/api/transactions?all=true").catch(() => {}),
+      apiClient.delete("/api/bills?all=true").catch(() => {}),
+      apiClient.delete("/api/budgets?all=true").catch(() => {}),
+    ])
     window.location.reload()
   }
 

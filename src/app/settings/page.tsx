@@ -7,7 +7,7 @@ import { ProfileIcon } from "@/types/settings"
 import { useDarkMode } from "@/hooks/useDarkMode"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
-
+import { useEffect } from "react"
 const PROFILE_ICONS: { value: ProfileIcon; emoji: string; label: string }[] = [
   { value: "cat",    emoji: "🐱", label: "Cat" },
   { value: "dog",    emoji: "🐶", label: "Dog" },
@@ -27,6 +27,10 @@ export default function SettingsPage() {
   const [username, setUsername] = useState(settings.username)
   const [confirmClear, setConfirmClear] = useState(false)
 
+  // Add this so it updates when settings load from API
+useEffect(() => {
+  setUsername(settings.username)
+}, [settings.username])
   function handleSaveUsername() {
     if (!username.trim()) return
     updateSettings({ username: username.trim() })

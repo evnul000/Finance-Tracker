@@ -176,3 +176,21 @@
     background: var(--primary);
   }
 }
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animated-bg {
+  background: linear-gradient(
+    135deg,
+    #0f0f13,
+    #1a0e2e,
+    #0f0f1f,
+    #130a2a,
+    #0f0f13
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 20s ease infinite;
+}

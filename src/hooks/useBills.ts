@@ -1,42 +1,39 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Bill } from "@/types/bill"
+import { apiClient } from "@/lib/apiClient"
 import { toast } from "sonner"
 
 export function useBills() {
-  const [bills, setBills] = useState<Bill[]>(() => {
-    if (typeof window === "undefined") return []
-    const stored = localStorage.getItem("bills")
-    return stored ? JSON.parse(stored) : []
-  })
+  const [bills, setBills] = useState<Bill[]>([])
+  const [loading, setLoading] = useState(true)
 
-  function saveBills(updated: Bill[]) {
-    setBills(updated)
-    localStorage.setItem("bills", JSON.stringify(updated))
+  useEffect(() => {
+    apiClient.get<{ bills: Bill[] }>("/api/bills")
+      .then(data => setBills(data.bills))
+      .catch(() => setBills([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  async function addBill(bill: Bill) {
+    const data = await apiClient.post<{ bill: Bill }>("/api/bills", bill)
+    setBills(prev => [data.bill, ...prev])
+    toast.success(`Added "${bill.name}"`)
   }
 
-  function addBill(bill: Bill) {
-    const updated = [bill, ...bills]
-    saveBills(updated)
-    toast.success(`Added "${bill.name}"`, {
-      description: `$${bill.amount.toFixed(2)} · ${bill.frequency}`,
-    })
-  }
-
-  function deleteBill(id: string) {
-    const target = bills.find((b) => b.id === id)
-    saveBills(bills.filter((b) => b.id !== id))
+  async function deleteBill(id: string) {
+    const target = bills.find(b => b.id === id)
+    await apiClient.delete(`/api/bills?id=${id}`)
+    setBills(prev => prev.filter(b => b.id !== id))
     if (target) toast.error(`Removed "${target.name}"`)
   }
 
-  function markPaid(id: string) {
-    const updated = bills.map((b) =>
-      b.id === id ? { ...b, lastPaid: new Date().toISOString() } : b
-    )
-    saveBills(updated)
+  async function markPaid(id: string) {
+    await apiClient.patch("/api/bills", { id, lastPaid: new Date().toISOString() })
+    setBills(prev => prev.map(b => b.id === id ? { ...b, lastPaid: new Date().toISOString() } : b))
     toast.success("Marked as paid!")
   }
 
-  return { bills, addBill, deleteBill, markPaid }
+  return { bills, loading, addBill, deleteBill, markPaid }
 }
