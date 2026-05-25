@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs"
+import { prisma } from "./prisma"
 
 export type User = {
   id: string
@@ -7,18 +8,15 @@ export type User = {
   passwordHash: string
 }
 
-const users: User[] = []
-
 export async function createUser(email: string, username: string, password: string): Promise<User> {
-  if (users.find(u => u.email === email)) throw new Error("Email already registered")
+  const existing = await prisma.user.findUnique({ where: { email } })
+  if (existing) throw new Error("Email already registered")
   const passwordHash = await bcrypt.hash(password, 12)
-  const user: User = { id: crypto.randomUUID(), email, username, passwordHash }
-  users.push(user)
-  return user
+  return prisma.user.create({ data: { email, username, passwordHash } })
 }
 
 export async function findUserByEmail(email: string): Promise<User | null> {
-  return users.find(u => u.email === email) ?? null
+  return prisma.user.findUnique({ where: { email } })
 }
 
 export async function validatePassword(user: User, password: string): Promise<boolean> {

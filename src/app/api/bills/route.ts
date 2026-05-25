@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { verifyAccessToken } from "@/lib/auth"
-
-const userBills: Record<string, unknown[]> = {}
+import { prisma } from "@/lib/prisma"
 
 function getAuthUser(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "")
@@ -12,23 +11,30 @@ function getAuthUser(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const user = getAuthUser(req)
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  return NextResponse.json({ bills: userBills[user.userId] ?? [] })
+  const bills = await prisma.bill.findMany({ where: { userId: user.userId } })
+  return NextResponse.json({ bills })
 }
 
 export async function POST(req: NextRequest) {
   const user = getAuthUser(req)
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const bill = await req.json()
-  if (!userBills[user.userId]) userBills[user.userId] = []
-  userBills[user.userId].unshift({ ...bill, id: crypto.randomUUID() })
-  return NextResponse.json({ bill: userBills[user.userId][0] }, { status: 201 })
+  const body = await req.json()
+  const bill = await prisma.bill.create({
+    data: { ...body, userId: user.userId },
+  })
+  return NextResponse.json({ bill }, { status: 201 })
 }
 
 export async function DELETE(req: NextRequest) {
   const user = getAuthUser(req)
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const id = new URL(req.url).searchParams.get("id")
-  userBills[user.userId] = (userBills[user.userId] ?? []).filter((b: unknown) => (b as {id:string}).id !== id)
+  const all = new URL(req.url).searchParams.get("all")
+  if (all) {
+    await prisma.bill.deleteMany({ where: { userId: user.userId } })
+  } else {
+    await prisma.bill.delete({ where: { id: id! } })
+  }
   return NextResponse.json({ success: true })
 }
 
@@ -36,8 +42,6 @@ export async function PATCH(req: NextRequest) {
   const user = getAuthUser(req)
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { id, ...updates } = await req.json()
-  userBills[user.userId] = (userBills[user.userId] ?? []).map((b: unknown) =>
-    (b as {id:string}).id === id ? { ...(b as object), ...updates } : b
-  )
+  await prisma.bill.update({ where: { id }, data: updates })
   return NextResponse.json({ success: true })
 }
