@@ -5,6 +5,7 @@ import { DashboardLayout } from "@/components/layout/Dashboard"
 import { useBudgets } from "@/hooks/useBudgets"
 import { Transaction } from "@/types/transaction"
 import { BudgetPanel } from "@/components/dashboard/BudgetPanel"
+import { apiClient } from "@/lib/apiClient"
 import { motion } from "framer-motion"
 
 export default function BudgetsPage() {
@@ -13,16 +14,17 @@ export default function BudgetsPage() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const stored = localStorage.getItem("transactions")
-    if (stored) setTransactions(JSON.parse(stored))
-    setMounted(true)
+    apiClient.get<{ transactions: Transaction[] }>("/api/transactions")
+      .then(data => setTransactions(data.transactions))
+      .catch(() => {})
+      .finally(() => setMounted(true))
   }, [])
 
-  const currentMonth  = new Date().toISOString().slice(0, 7)
-  const monthBudgets  = budgets.filter((b) => b.month === currentMonth)
-  const overBudget    = monthBudgets.filter((b) => {
+  const currentMonth = new Date().toISOString().slice(0, 7)
+  const monthBudgets = budgets.filter(b => b.month === currentMonth)
+  const overBudget   = monthBudgets.filter(b => {
     const spent = transactions
-      .filter((t) => t.category === b.category && t.type === "expense" && t.date.slice(0, 7) === currentMonth)
+      .filter(t => t.category === b.category && t.type === "expense" && t.date.slice(0, 7) === currentMonth)
       .reduce((s, t) => s + t.amount, 0)
     return spent > b.limit
   })
@@ -39,7 +41,6 @@ export default function BudgetsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <h1 className="text-3xl font-bold">Budgets</h1>
           <p className="text-muted-foreground mt-1">Manage your monthly budget goals.</p>
@@ -77,7 +78,6 @@ export default function BudgetsPage() {
             onDeleteBudget={deleteBudget}
           />
         </motion.div>
-
       </div>
     </DashboardLayout>
   )
